@@ -37,24 +37,6 @@ if ( ! defined( 'WPINC' ) ) {
  */
 define( 'DIGVENTURES_AUTH_VERSION', '1.0.0' );
 
-/**
- * The code that runs during plugin activation.
- * This action is documented in includes/class-digventures-auth-activator.php
- */
-function activate_digventures_auth() {
-	require_once plugin_dir_path( __FILE__ ) . 'includes/class-digventures-auth-activator.php';
-	Digventures_Auth_Activator::activate();
-}
-
-/**
- * The code that runs during plugin deactivation.
- * This action is documented in includes/class-digventures-auth-deactivator.php
- */
-function deactivate_digventures_auth() {
-	require_once plugin_dir_path( __FILE__ ) . 'includes/class-digventures-auth-deactivator.php';
-	Digventures_Auth_Deactivator::deactivate();
-}
-
 register_activation_hook( __FILE__, 'activate_digventures_auth' );
 register_deactivation_hook( __FILE__, 'deactivate_digventures_auth' );
 
