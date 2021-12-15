@@ -91,6 +91,8 @@ class Digventures_Api {
       $firstname = (!empty(get_field('first_name', $user->ID))) ? get_field('first_name', $user->ID) : null;
       $lastname = (!empty(get_field('last_name', $user->ID))) ? get_field('last_name', $user->ID) : null;
       $role = (!empty(get_field('role', $user->ID))) ? get_field('role', $user->ID) : 'user';
+      $projects = get_field('ddt_projects', $user->ID) ?: array();
+      $dark_mode = !empty(get_field('dark_mode', $user->ID)) ? get_field('dark_mode', $user->ID) : false;
 
       $response = [
         'message' => 'User Fetched',
@@ -98,7 +100,9 @@ class Digventures_Api {
         'first_name' => $firstname,
         'last_name' => $lastname,
         'role' => $role,
-        'profile_image' => get_the_post_thumbnail_url($user->ID, 'full') ?: false
+        'profile_image' => get_the_post_thumbnail_url($user->ID, 'full') ?: false,
+        'projects' => $projects,
+        'dark_mode' => $dark_mode
       ];
     
       wp_send_json($response);
