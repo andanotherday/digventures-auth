@@ -17,6 +17,53 @@ class Digventures_Api {
       'methods' => 'GET',
       'callback' => array($this, 'fetch_user')
     ]);
+
+    /** Fetch all users */
+    register_rest_route('ddt/v1', '/users/fetch', [
+      'methods' => 'GET',
+      'callback' => array($this, 'fetch_users')
+    ]);
+
+    /** Update user */
+    register_rest_route('ddt/v1', '/user/update', [
+      'methods' => 'POST',
+      'callback' => array($this, 'update_user')
+    ]);
+  }
+
+  public function user_data_response($id = false, $unset = array()) {
+    $response = array();
+
+    if ($id) {
+      $firstname = (!empty(get_field('first_name', $id))) ? get_field('first_name', $id) : null;
+      $lastname = (!empty(get_field('last_name', $id))) ? get_field('last_name', $id) : null;
+      $email = get_the_title($id);
+      $role = (!empty(get_field('role', $id))) ? get_field('role', $id) : 'user';
+      $projects = get_field('ddt_projects', $id) ?: array();
+      $dark_mode = !empty(get_field('dark_mode', $id)) ? get_field('dark_mode', $id) : false;
+      $biography = !empty(get_field('biography', $id)) ? get_field('biography', $id) : '';
+      $profile_image = get_the_post_thumbnail_url($id, 'full') ?: false;
+
+      $response = array(
+        'id' => $id,
+        'email' => $email,
+        'first_name' => $firstname,
+        'last_name' => $lastname,
+        'role' => $role,
+        'profile_image' => $profile_image,
+        'projects' => $projects,
+        'dark_mode' => $dark_mode,
+        'biography' => $biography
+      );
+
+      if (!empty($unset) && count($unset) > 0) {
+        foreach ($unset as $property) {
+          unset($response[$property]);
+        }
+      }
+    }
+
+    return $response;
   }
 
   public function create_user(WP_REST_Request $request) {
@@ -54,22 +101,21 @@ class Digventures_Api {
       update_field('role', $role, $post_id);
     } else {
       /** Else return them */
-      $post_id = $post->ID;
+      $response = [
+        'message' => 'User already exists',
+        'status' => 'failed',
+        'data' => $this->user_data_response($post->ID)
+      ];
+  
+      wp_send_json($response);
+      die();
     }
 
     if ($post_id) {
-      $firstname = (!empty(get_field('first_name', $post_id))) ? get_field('first_name', $post_id) : null;
-      $lastname = (!empty(get_field('last_name', $post_id))) ? get_field('last_name', $post_id) : null;
-      $role = (!empty(get_field('role', $post_id))) ? get_field('role', $post_id) : 'user';
-  
       $response = [
         'message' => 'User created',
         'status' => 'success',
-        'id' => $post_id,
-        'email' => $email,
-        'first_name' => $firstname,
-        'last_name' => $lastname,
-        'role' => $role
+        'data' => $this->user_data_response($post_id)
       ];
   
       wp_send_json($response);
@@ -82,29 +128,85 @@ class Digventures_Api {
 
 
   public function fetch_user($params) {
-    $user = get_post($params['id']);
+    $user = (object) get_post($params['id']);
 
     if (empty($user) || !empty($user) && $user->post_type !== 'ddt_users') {
       wp_send_json(['message' => 'No user found', 'status' => 'failed']);
       die();
     } else {
-      $firstname = (!empty(get_field('first_name', $user->ID))) ? get_field('first_name', $user->ID) : null;
-      $lastname = (!empty(get_field('last_name', $user->ID))) ? get_field('last_name', $user->ID) : null;
-      $role = (!empty(get_field('role', $user->ID))) ? get_field('role', $user->ID) : 'user';
-      $projects = get_field('ddt_projects', $user->ID) ?: array();
-      $dark_mode = !empty(get_field('dark_mode', $user->ID)) ? get_field('dark_mode', $user->ID) : false;
-      $bio = !empty(get_field('biography', $user->ID)) ? get_field('biography', $user->ID) : '';
-
       $response = [
         'message' => 'User Fetched',
         'status' => 'success',
-        'first_name' => $firstname,
-        'last_name' => $lastname,
-        'role' => $role,
-        'profile_image' => get_the_post_thumbnail_url($user->ID, 'full') ?: false,
-        'projects' => $projects,
-        'dark_mode' => $dark_mode,
-        'bio' => $bio
+        'data' => $this->user_data_response($user->ID)
+      ];
+    
+      wp_send_json($response);
+      die();
+    }
+
+    wp_send_json(['message' => 'No user found', 'status' => 'failed']);
+    die();
+  }
+
+
+  public function fetch_users() {
+    $users = get_posts(array(
+      'post_type' => 'ddt_users',
+      'posts_per_page' => -1
+    ));
+
+    if (!empty($users) && is_array($users) && count($users) > 0) {
+      $formatted_users = array();
+
+      foreach ($users as $user) {
+        array_push($formatted_users, $this->user_data_response($user->ID, array('biography')));
+      }
+
+      $response = [
+        'message' => 'Users Fetched',
+        'status' => 'success',
+        'data' => $formatted_users
+      ];
+    
+      wp_send_json($response);
+      die();
+    }
+
+    wp_send_json(['message' => 'No users found', 'status' => 'failed']);
+    die();
+  }
+
+
+  public function update_user(WP_REST_Request $request) {
+    $body = $request->get_params();
+
+    $id = (int) $body['id'];
+    $user = (object) get_post($id);
+
+    if (empty($user) || !empty($user) && $user->post_type !== 'ddt_users') {
+      wp_send_json(['message' => 'No user found', 'status' => 'failed']);
+      die();
+    } else {
+      $fields = json_decode($body['fields'], true);
+
+      if (!empty($fields) && is_array($fields) && count($fields) > 0) {
+        foreach ($fields as $key => $value) {
+          if ($key == 'dark_mode') {
+            $value = (int) $value;
+          }
+
+          update_field($key, $value, $user->ID);
+        }
+      } else {
+        wp_send_json(['message' => 'Unable to update user', 'status' => 'failed']);
+        die();
+      }
+
+      /** Return data */
+      $response = [
+        'message' => 'User Updated',
+        'status' => 'success',
+        'data' => $this->user_data_response($user->ID)
       ];
     
       wp_send_json($response);
