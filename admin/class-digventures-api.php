@@ -29,6 +29,11 @@ class Digventures_Api {
       'methods' => 'POST',
       'callback' => array($this, 'update_user')
     ]);
+
+    register_rest_route('ddt/v1', '/user/update-profile-image', [
+      'methods' => 'POST',
+      'callback' => array($this, 'update_user_profile_image')
+    ]);
   }
 
   public function user_data_response($id = false, $unset = array()) {
@@ -204,7 +209,7 @@ class Digventures_Api {
 
       /** Return data */
       $response = [
-        'message' => 'User Updated',
+        'message' => 'User updated',
         'status' => 'success',
         'data' => $this->user_data_response($user->ID)
       ];
@@ -215,5 +220,109 @@ class Digventures_Api {
 
     wp_send_json(['message' => 'No user found', 'status' => 'failed']);
     die();
+  }
+
+
+  public function update_user_profile_image(WP_REST_Request $request) {
+    $body = $request->get_params();
+    $files = $request->get_file_params();
+    
+    $id = (int) $body['id'];
+    $user = (object) get_post($id);
+
+    if (empty($user) || !empty($user) && $user->post_type !== 'ddt_users') {
+      wp_send_json(['message' => 'No user found', 'status' => 'failed']);
+      die();
+    } else {
+      $file_upload = $this->handle_file_upload($files['image']);
+
+      if ($file_upload['success']) {
+        set_post_thumbnail($user->ID, $file_upload['id']);
+
+        /** Return data */
+        $response = [
+          'message' => 'Profile image updated',
+          'status' => 'success',
+          'data' => $this->user_data_response($user->ID)
+        ];
+      
+        wp_send_json($response);
+        die();
+      } else {
+        wp_send_json(['message' => 'Unable to upload image', 'status' => 'failed']);
+        die();
+      }
+    }
+
+    wp_send_json(['message' => 'No user found', 'status' => 'failed']);
+    die();
+  }
+
+  public function handle_file_upload($file) {
+    $wordpress_upload_dir = wp_upload_dir();
+    // $wordpress_upload_dir['path'] is the full server path to wp-content/uploads/2017/05, for multisite works good as well
+    // $wordpress_upload_dir['url'] the absolute URL to the same folder, actually we do not need it, just to show the link to file
+    $i = 1; // number of tries when the file with the same name is already exists
+
+    $new_file_path = $wordpress_upload_dir['path'].'/'.time().'-'.$file['name'];
+    $new_file_url = $wordpress_upload_dir['url'].'/'.time().'-'.$file['name'];
+
+    $new_file_mime = mime_content_type($file['tmp_name']);
+
+    if (empty($file)) {
+      return [
+        'success' => false,
+        'message' => 'File is not selected'
+      ];
+    }
+
+    if ($file['error']) {
+      return [
+        'success' => false,
+        'message' => $file['error']
+      ];
+    }
+      
+    if ($file['size'] > wp_max_upload_size()) {
+      return [
+        'success' => false,
+        'message' => 'File should be less than '.size_format(wp_max_upload_size(), 2)
+      ];
+    }
+
+    if (!in_array($new_file_mime, get_allowed_mime_types())) {
+      return [
+        'success' => false,
+        'message' => 'This file type is not allowed'
+      ];
+    }
+      
+    while (file_exists($new_file_path)) {
+      $i++;
+      $new_file_path = $wordpress_upload_dir['path'].'/'.time().'-'.$file['name'];
+      $new_file_url = $wordpress_upload_dir['url'].'/'.time().'-'.$file['name'];
+    }
+
+    /** It looks like everything is OK */
+    if (move_uploaded_file($file['tmp_name'], $new_file_path)) {
+      $upload_id = wp_insert_attachment([
+        'guid'           => $new_file_url,
+        'post_mime_type' => $new_file_mime,
+        'post_title'     => preg_replace('/\.[^.]+$/', '', $file['name']),
+        'post_content'   => '',
+        'post_status'    => 'inherit'
+      ], $new_file_path);
+
+      /** wp_generate_attachment_metadata() won't work if you do not include this file */
+      require_once(ABSPATH . 'wp-admin/includes/image.php');
+
+      /** Generate and save the attachment metas into the database */
+      wp_update_attachment_metadata($upload_id, wp_generate_attachment_metadata($upload_id, $new_file_path));
+
+      return [
+        'success' => true,
+        'id' => $upload_id
+      ];
+    }
   }
 }

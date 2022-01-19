@@ -214,7 +214,7 @@ class Digventures_Cpt {
     /** Get projects from DDT DB */
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_URL, 'http://dig.local/api/getProjects.php');
+    curl_setopt($ch, CURLOPT_URL, 'http://dig.local/api/v1/projects/getProjects.php');
     $result = curl_exec($ch);
     curl_close($ch);
 
