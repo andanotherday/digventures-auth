@@ -34,6 +34,12 @@ class Digventures_Api {
       'methods' => 'POST',
       'callback' => array($this, 'update_user_profile_image')
     ]);
+
+    /** Project */
+    register_rest_route('ddt/v1', '/project/users', [
+      'methods' => 'POST',
+      'callback' => array($this, 'fetch_project_users')
+    ]);
   }
 
   public function user_data_response($id = false, $unset = array()) {
@@ -255,6 +261,42 @@ class Digventures_Api {
     }
 
     wp_send_json(['message' => 'No user found', 'status' => 'failed']);
+    die();
+  }
+
+
+  /** Fetch project users */
+  public function fetch_project_users(WP_REST_Request $request) {
+    $body = $request->get_params();
+    $project_id = $body['project_id'];
+
+    $users = get_posts(array(
+      'post_type' => 'ddt_users',
+      'posts_per_page' => -1
+    ));
+
+    if (!empty($users) && is_array($users) && count($users) > 0) {
+      $formatted_users = array();
+
+      foreach ($users as $user) {
+        $projects = get_field('ddt_projects', $user->ID) ?: array();
+
+        if (in_array($project_id, $projects)) {
+          array_push($formatted_users, $this->user_data_response($user->ID, array('biography')));
+        }
+      }
+
+      $response = [
+        'message' => 'Users Fetched',
+        'status' => 'success',
+        'data' => $formatted_users
+      ];
+    
+      wp_send_json($response);
+      die();
+    }
+
+    wp_send_json(['message' => 'No users found', 'status' => 'failed']);
     die();
   }
 
