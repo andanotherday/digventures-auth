@@ -60,6 +60,44 @@ class Digventures_Cpt {
         'title' => 'DDT Users',
         'fields' => array(
           array(
+            'key' => 'field_61b9c43d77c60',
+            'label' => 'First Name',
+            'name' => 'first_name',
+            'type' => 'text',
+            'instructions' => '',
+            'required' => 0,
+            'conditional_logic' => 0,
+            'wrapper' => array(
+              'width' => '',
+              'class' => '',
+              'id' => '',
+            ),
+            'default_value' => '',
+            'placeholder' => '',
+            'prepend' => '',
+            'append' => '',
+            'maxlength' => '',
+          ),
+          array(
+            'key' => 'field_61b9c44877c61',
+            'label' => 'Last Name',
+            'name' => 'last_name',
+            'type' => 'text',
+            'instructions' => '',
+            'required' => 0,
+            'conditional_logic' => 0,
+            'wrapper' => array(
+              'width' => '',
+              'class' => '',
+              'id' => '',
+            ),
+            'default_value' => '',
+            'placeholder' => '',
+            'prepend' => '',
+            'append' => '',
+            'maxlength' => '',
+          ),
+          array(
             'key' => 'field_6193ee16caad4',
             'label' => 'Role',
             'name' => 'role',
@@ -97,7 +135,8 @@ class Digventures_Cpt {
               'class' => '',
               'id' => '',
             ),
-            'choices' => array(),
+            'choices' => array(
+            ),
             'allow_custom' => 0,
             'default_value' => array(
             ),
@@ -105,6 +144,44 @@ class Digventures_Cpt {
             'toggle' => 0,
             'return_format' => 'value',
             'save_custom' => 0,
+          ),
+          array(
+            'key' => 'field_6194fd1921ec2',
+            'label' => 'Dark Mode',
+            'name' => 'dark_mode',
+            'type' => 'true_false',
+            'instructions' => '',
+            'required' => 0,
+            'conditional_logic' => 0,
+            'wrapper' => array(
+              'width' => '',
+              'class' => '',
+              'id' => '',
+            ),
+            'message' => '',
+            'default_value' => 0,
+            'ui' => 1,
+            'ui_on_text' => '',
+            'ui_off_text' => '',
+          ),
+          array(
+            'key' => 'field_61b9c347ea2b7',
+            'label' => 'Biography',
+            'name' => 'biography',
+            'type' => 'textarea',
+            'instructions' => '',
+            'required' => 0,
+            'conditional_logic' => 0,
+            'wrapper' => array(
+              'width' => '',
+              'class' => '',
+              'id' => '',
+            ),
+            'default_value' => '',
+            'placeholder' => '',
+            'maxlength' => '',
+            'rows' => '',
+            'new_lines' => '',
           ),
         ),
         'location' => array(
@@ -124,7 +201,7 @@ class Digventures_Cpt {
         'hide_on_screen' => '',
         'active' => true,
         'description' => '',
-      ));
+      )); 
     }
   }
 
@@ -137,7 +214,7 @@ class Digventures_Cpt {
     /** Get projects from DDT DB */
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_URL, 'http://dig.local/api/getProjects.php');
+    curl_setopt($ch, CURLOPT_URL, 'http://dig.local/api/v1/projects/getProjects.php');
     $result = curl_exec($ch);
     curl_close($ch);
 
