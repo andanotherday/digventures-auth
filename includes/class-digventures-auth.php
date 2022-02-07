@@ -105,6 +105,9 @@ class Digventures_Auth {
     require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-digventures-cpt.php';
     new Digventures_Cpt();
 
+    require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-digventures-options.php';
+    new Digventures_Options_Page();
+
     require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-digventures-api.php';
     new Digventures_Api();
 	}
