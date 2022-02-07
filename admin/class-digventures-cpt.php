@@ -1,6 +1,5 @@
 <?php
 
-
 class Digventures_Cpt {
   public function __construct() {
     /** CPT */
@@ -112,6 +111,7 @@ class Digventures_Cpt {
             ),
             'choices' => array(
               'user' => 'User',
+              'staff' => 'Staff',
               'admin' => 'Admin',
             ),
             'default_value' => 'user',
@@ -165,6 +165,25 @@ class Digventures_Cpt {
             'ui_off_text' => '',
           ),
           array(
+            'key' => 'field_61fc020c344bc',
+            'label' => 'Visibility',
+            'name' => 'visibility',
+            'type' => 'true_false',
+            'instructions' => '',
+            'required' => 0,
+            'conditional_logic' => 0,
+            'wrapper' => array(
+              'width' => '',
+              'class' => '',
+              'id' => '',
+            ),
+            'message' => '',
+            'default_value' => 1,
+            'ui' => 1,
+            'ui_on_text' => '',
+            'ui_off_text' => '',
+          ),
+          array(
             'key' => 'field_61b9c347ea2b7',
             'label' => 'Biography',
             'name' => 'biography',
@@ -201,7 +220,7 @@ class Digventures_Cpt {
         'hide_on_screen' => '',
         'active' => true,
         'description' => '',
-      )); 
+      ));
     }
   }
 
@@ -211,10 +230,13 @@ class Digventures_Cpt {
     /** Reset choices */
     $field['choices'] = [];
 
+    /** Get the URL from optons */
+    $platform_api_url = get_field('ddt_platform_api_url', 'option');
+
     /** Get projects from DDT DB */
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_URL, 'http://dig.local/api/v1/projects/getProjects.php');
+    curl_setopt($ch, CURLOPT_URL, $platform_api_url.'/projects/getProjects.php');
     $result = curl_exec($ch);
     curl_close($ch);
 
